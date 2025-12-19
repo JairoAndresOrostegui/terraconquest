@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "75932758891",
+    "project_id": "terra-conquest-a7026",
+    "storage_bucket": "terra-conquest-a7026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:75932758891:android:acda3af755e56706e6d22e",
+        "android_client_info": {
+          "package_name": "com.example.terra_conquest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-H64TZqLMUooAzMRDUEOmIfRcwAN7N8w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
