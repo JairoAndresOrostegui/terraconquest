@@ -1,0 +1,71 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "partidas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "fechaInicio", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "razas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "activo", "order": "ASCENDING" },
+        { "fieldPath": "nombre", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "terrenos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "activo", "order": "ASCENDING" },
+        { "fieldPath": "nombre", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "ciudades",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "imperioId", "order": "ASCENDING" },
+        { "fieldPath": "creadoEn", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "eventos",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "imperioId", "order": "ASCENDING" },
+        { "fieldPath": "creadoEn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "eventos",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "visibleGlobal", "order": "ASCENDING" },
+        { "fieldPath": "creadoEn", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "heroesMercado",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "disponible", "order": "ASCENDING" },
+        { "fieldPath": "clase", "order": "ASCENDING" },
+        { "fieldPath": "nivel", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "heroes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "imperioId", "order": "ASCENDING" },
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "nivel", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
