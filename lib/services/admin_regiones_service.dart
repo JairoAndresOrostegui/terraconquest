@@ -2,41 +2,36 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminRegionesService {
   AdminRegionesService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> observarRegiones(
-    String partidaId,
-  ) {
-    return _firestore
-        .collection('partidas')
-        .doc(partidaId)
-        .collection('regiones')
-        .orderBy('numero')
-        .snapshots();
+  Stream<QuerySnapshot<Map<String, dynamic>>> observarRegionesGlobales() {
+    return _firestore.collection('regiones').orderBy('nombre').snapshots();
   }
 
-  Future<void> guardarRegion({
-    required String partidaId,
+  Future<void> guardarRegionGlobal({
     String? regionId,
-    required int numero,
     required String nombre,
+    required String codigo,
+    required String descripcion,
+    required String imagenUrl,
+    required bool activo,
     required List<String> terrenosPermitidos,
-    String imagenMapaUrl = '',
+    required Map<String, int> bonos,
   }) async {
     final data = {
-      'numero': numero,
       'nombre': nombre.trim(),
+      'codigo': codigo.trim().toUpperCase(),
+      'descripcion': descripcion.trim(),
+      'imagenUrl': imagenUrl.trim(),
+      'activo': activo,
       'terrenosPermitidos': terrenosPermitidos,
-      'imagenMapaUrl': imagenMapaUrl.trim(),
+      'bonos': bonos,
       'actualizadoEn': FieldValue.serverTimestamp(),
     };
 
-    final regionesRef = _firestore
-        .collection('partidas')
-        .doc(partidaId)
-        .collection('regiones');
+    final regionesRef = _firestore.collection('regiones');
 
     if (regionId == null) {
       await regionesRef.add({
@@ -48,25 +43,38 @@ class AdminRegionesService {
     }
   }
 
-  Future<void> eliminarRegion({
-    required String partidaId,
-    required String regionId,
-  }) {
-    return _firestore
-        .collection('partidas')
-        .doc(partidaId)
-        .collection('regiones')
-        .doc(regionId)
-        .delete();
+  Future<void> eliminarRegionGlobal(String regionId) {
+    return _firestore.collection('regiones').doc(regionId).delete();
   }
 
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
-      obtenerTerrenosActivos() async {
-    final snapshot = await _firestore
-        .collection('terrenos')
-        .where('activo', isEqualTo: true)
-        .orderBy('nombre')
-        .get();
+  obtenerTerrenosActivos() async {
+    final snapshot =
+        await _firestore
+            .collection('terrenos')
+            .where('activo', isEqualTo: true)
+            .orderBy('nombre')
+            .get();
+
+    return snapshot.docs;
+  }
+
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  obtenerRegionesActivas() async {
+    final snapshot =
+        await _firestore
+            .collection('regiones')
+            .where('activo', isEqualTo: true)
+            .orderBy('nombre')
+            .get();
+
+    return snapshot.docs;
+  }
+
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  obtenerRegionesParaPartidas() async {
+    final snapshot =
+        await _firestore.collection('regiones').orderBy('nombre').get();
 
     return snapshot.docs;
   }

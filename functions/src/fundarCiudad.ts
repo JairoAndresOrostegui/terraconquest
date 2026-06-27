@@ -93,7 +93,7 @@ export const fundarCiudad = onCall(async (request) => {
 
   const partidaRef = db.collection("partidas").doc(partidaId);
   const imperioRef = partidaRef.collection("imperios").doc(imperioId);
-  const regionRef = partidaRef.collection("regiones").doc(regionId);
+  const regionRef = db.collection("regiones").doc(regionId);
   const terrenoRef = db.collection("terrenos").doc(terrenoId);
   const ciudadesRef = partidaRef.collection("ciudades");
 
@@ -143,6 +143,14 @@ export const fundarCiudad = onCall(async (request) => {
 
     if (imperio.estado !== "activo") {
       throw new HttpsError("failed-precondition", "El imperio no está activo.");
+    }
+
+    const regionesDisponibles = listaStrings(partida.regionesDisponibles);
+    if (!regionesDisponibles.includes(regionId)) {
+      throw new HttpsError(
+        "failed-precondition",
+        "La regiÃ³n seleccionada no estÃ¡ disponible en esta partida."
+      );
     }
 
     const terrenosPermitidos = listaStrings(region.terrenosPermitidos);
@@ -199,7 +207,13 @@ export const fundarCiudad = onCall(async (request) => {
       nombreLower: nombreCiudadLower,
       numeroCiudad: numero(partida.contadorCiudades) + 1,
       regionId,
-      regionNumero: numero(region.numero),
+      regionCodigo: typeof region.codigo === "string" ? region.codigo : "",
+      regionBonos:
+        typeof region.bonos === "object" &&
+        region.bonos !== null &&
+        !Array.isArray(region.bonos)
+          ? region.bonos
+          : {},
       terrenoId,
       poblacion: 500,
       estado: "activa",
@@ -223,7 +237,8 @@ export const fundarCiudad = onCall(async (request) => {
       ciudad: ciudadBase,
       edificios: edificiosIniciales,
       terreno,
-      raza
+      raza,
+      region
     });
 
     await recalcularProduccionImperio({

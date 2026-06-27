@@ -1,0 +1,10 @@
+[
+  {
+    "origin": [
+      "https://terraconquest-d7a39.web.app",
+      "https://terraconquest-d7a39.firebaseapp.com"
+    ],
+    "method": ["GET", "HEAD"],
+    "maxAgeSeconds": 3600
+  }
+]

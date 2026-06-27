@@ -81,6 +81,23 @@ export function bonoTerreno(
   return numero((bonos as Record<string, unknown>)[`${recurso}Pct`]);
 }
 
+export function bonoRegion(
+  region: Record<string, unknown>,
+  recurso: string
+): number {
+  const bonos = region.bonos;
+
+  if (typeof bonos !== "object" || bonos === null || Array.isArray(bonos)) {
+    return 0;
+  }
+
+  const bonosRegion = bonos as Record<string, unknown>;
+  return (
+    numero(bonosRegion[`${recurso}Pct`]) +
+    numero(bonosRegion.produccionPct)
+  );
+}
+
 function valorPorRuta(
   data: Record<string, unknown>,
   seccion: string,
@@ -114,8 +131,9 @@ export function calcularProduccionCiudad(params: {
   edificios: Record<string, number>;
   terreno: Record<string, unknown>;
   raza: Record<string, unknown>;
+  region?: Record<string, unknown>;
 }) {
-  const { ciudad, edificios, terreno, raza } = params;
+  const { ciudad, edificios, terreno, raza, region = {} } = params;
   const poblacion = numero(ciudad.poblacion);
   const produccion = { ...RECURSOS_BASE };
 
@@ -141,7 +159,10 @@ export function calcularProduccionCiudad(params: {
   );
 
   for (const recurso of Object.keys(produccion)) {
-    const bonoTotal = bonoTerreno(terreno, recurso) + bonoRazaProduccion(raza);
+    const bonoTotal =
+      bonoTerreno(terreno, recurso) +
+      bonoRegion(region, recurso) +
+      bonoRazaProduccion(raza);
     const corrupcion = numero(ciudad.corrupcion);
     const valorConBonos = aplicarBono(produccion[recurso], bonoTotal);
 
@@ -167,7 +188,9 @@ export function calcularProduccionCiudad(params: {
   );
   const crecimientoConBonos = aplicarBono(
     crecimientoBase,
-    bonoTerreno(terreno, "crecimiento") + bonoRazaCrecimiento(raza)
+    bonoTerreno(terreno, "crecimiento") +
+      bonoRegion(region, "crecimiento") +
+      bonoRazaCrecimiento(raza)
   );
   const crecimientoPoblacionDia = Math.max(
     0,

@@ -126,10 +126,11 @@ class _FundarCiudadScreenState extends State<FundarCiudadScreen> {
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => CiudadDetalleScreen(
-            partidaId: widget.partidaId,
-            ciudadId: result['ciudadId'].toString(),
-          ),
+          builder:
+              (_) => CiudadDetalleScreen(
+                partidaId: widget.partidaId,
+                ciudadId: result['ciudadId'].toString(),
+              ),
         ),
       );
     } catch (_) {
@@ -171,20 +172,22 @@ class _FundarCiudadScreenState extends State<FundarCiudadScreen> {
           labelText: 'Región',
           border: OutlineInputBorder(),
         ),
-        items: _regiones.map((region) {
-          return DropdownMenuItem<RegionModel>(
-            value: region,
-            child: Text('${region.numero} - ${region.nombre}'),
-          );
-        }).toList(),
-        onChanged: _guardando
-            ? null
-            : (value) {
-                setState(() {
-                  _regionSeleccionada = value;
-                  _terrenoSeleccionado = null;
-                });
-              },
+        items:
+            _regiones.map((region) {
+              return DropdownMenuItem<RegionModel>(
+                value: region,
+                child: Text('${region.codigo} - ${region.nombre}'),
+              );
+            }).toList(),
+        onChanged:
+            _guardando
+                ? null
+                : (value) {
+                  setState(() {
+                    _regionSeleccionada = value;
+                    _terrenoSeleccionado = null;
+                  });
+                },
       ),
     );
   }
@@ -199,19 +202,21 @@ class _FundarCiudadScreenState extends State<FundarCiudadScreen> {
           labelText: 'Terreno',
           border: OutlineInputBorder(),
         ),
-        items: _terrenosDisponibles.map((terreno) {
-          return DropdownMenuItem<TerrenoModel>(
-            value: terreno,
-            child: Text(terreno.nombre),
-          );
-        }).toList(),
-        onChanged: _guardando || _regionSeleccionada == null
-            ? null
-            : (value) {
-                setState(() {
-                  _terrenoSeleccionado = value;
-                });
-              },
+        items:
+            _terrenosDisponibles.map((terreno) {
+              return DropdownMenuItem<TerrenoModel>(
+                value: terreno,
+                child: Text(terreno.nombre),
+              );
+            }).toList(),
+        onChanged:
+            _guardando || _regionSeleccionada == null
+                ? null
+                : (value) {
+                  setState(() {
+                    _terrenoSeleccionado = value;
+                  });
+                },
       ),
     );
   }
@@ -219,15 +224,11 @@ class _FundarCiudadScreenState extends State<FundarCiudadScreen> {
   @override
   Widget build(BuildContext context) {
     if (_cargando) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fundar ciudad'),
-      ),
+      appBar: AppBar(title: const Text('Fundar ciudad')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Center(
@@ -254,13 +255,14 @@ class _FundarCiudadScreenState extends State<FundarCiudadScreen> {
                   label: 'Fundar ciudad',
                   child: FilledButton.icon(
                     onPressed: _guardando ? null : _fundarCiudad,
-                    icon: _guardando
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.add_location_alt),
+                    icon:
+                        _guardando
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Icon(Icons.add_location_alt),
                     label: Text(_guardando ? 'Fundando...' : 'Fundar ciudad'),
                   ),
                 ),

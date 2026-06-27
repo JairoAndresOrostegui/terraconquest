@@ -1,54 +1,84 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../../../services/admin_terrenos_service.dart';
-import 'admin_terreno_form_dialog.dart';
+import '../../../services/admin_regiones_service.dart';
+import 'admin_region_global_form_dialog.dart';
 
-class AdminTerrenosScreen extends StatefulWidget {
-  const AdminTerrenosScreen({super.key});
+class AdminRegionesScreen extends StatefulWidget {
+  const AdminRegionesScreen({super.key});
 
   @override
-  State<AdminTerrenosScreen> createState() => _AdminTerrenosScreenState();
+  State<AdminRegionesScreen> createState() => _AdminRegionesScreenState();
 }
 
-class _AdminTerrenosScreenState extends State<AdminTerrenosScreen> {
-  final AdminTerrenosService _service = AdminTerrenosService();
+class _AdminRegionesScreenState extends State<AdminRegionesScreen> {
+  final AdminRegionesService _service = AdminRegionesService();
+  static const Map<String, String> _bonosLabels = {
+    'produccionPct': 'Produccion global',
+    'crecimientoPct': 'Crecimiento',
+    'famaPct': 'Fama',
+    'ataquePct': 'Ataque',
+    'defensaPct': 'Defensa',
+    'questHeroePct': 'Quest heroe',
+    'heroeAtaquePct': 'Ataque heroes',
+    'heroeDefensaPct': 'Defensa heroes',
+    'heroeMagiaPct': 'Magia heroes',
+    'heroeVidaPct': 'Vida heroes',
+    'oroPct': 'Oro',
+    'alimentosPct': 'Alimentos',
+    'aguaPct': 'Agua',
+    'maderaPct': 'Madera',
+    'piedraPct': 'Piedra',
+    'hierroPct': 'Hierro',
+    'herramientasPct': 'Herramientas',
+    'armasPct': 'Armas',
+    'bloquesPct': 'Bloques',
+    'tablasPct': 'Tablas',
+    'mithrilPct': 'Mithril',
+    'cristalPct': 'Cristal',
+    'plataPct': 'Plata',
+    'reliquiasPct': 'Reliquias',
+    'gemasPct': 'Gemas',
+    'joyasPct': 'Joyas',
+    'manaPct': 'Mana',
+    'karmaPct': 'Karma',
+  };
 
   void _mensaje(String texto) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
   Future<void> _abrirFormulario({
-    DocumentSnapshot<Map<String, dynamic>>? terreno,
+    DocumentSnapshot<Map<String, dynamic>>? region,
   }) async {
     final resultado = await showDialog<bool>(
       context: context,
-      builder: (_) => AdminTerrenoFormDialog(terreno: terreno),
+      builder: (_) => AdminRegionGlobalFormDialog(region: region),
     );
 
     if (resultado == true && mounted) {
       _mensaje(
-        terreno == null
-            ? 'Terreno creado correctamente.'
-            : 'Terreno actualizado correctamente.',
+        region == null
+            ? 'Region creada correctamente.'
+            : 'Region actualizada correctamente.',
       );
     }
   }
 
   Future<void> _confirmarEliminar(
-    DocumentSnapshot<Map<String, dynamic>> terreno,
+    DocumentSnapshot<Map<String, dynamic>> region,
   ) async {
-    final data = terreno.data() ?? {};
+    final data = region.data() ?? {};
     final nombre = data['nombre']?.toString() ?? '';
 
     final confirmar = await showDialog<bool>(
       context: context,
       builder:
           (_) => AlertDialog(
-            title: const Text('Eliminar terreno'),
+            title: const Text('Eliminar region'),
             content: Text(
               'Seguro que deseas eliminar "$nombre"?\n\n'
-              'Nota: si este terreno ya está usado por regiones o ciudades, es mejor desactivarlo en lugar de eliminarlo.',
+              'Si ya fue asignada a partidas, es mejor desactivarla.',
             ),
             actions: [
               TextButton(
@@ -66,12 +96,12 @@ class _AdminTerrenosScreenState extends State<AdminTerrenosScreen> {
     if (confirmar != true) return;
 
     try {
-      await _service.eliminarTerreno(terreno.id);
+      await _service.eliminarRegionGlobal(region.id);
       if (!mounted) return;
-      _mensaje('Terreno eliminado correctamente.');
+      _mensaje('Region eliminada correctamente.');
     } catch (_) {
       if (!mounted) return;
-      _mensaje('No se pudo eliminar el terreno.');
+      _mensaje('No se pudo eliminar la region.');
     }
   }
 
@@ -79,11 +109,13 @@ class _AdminTerrenosScreenState extends State<AdminTerrenosScreen> {
     final activos =
         bonos.entries
             .where((entry) => entry.value is num && entry.value != 0)
-            .map((entry) => '${entry.key}: ${entry.value}%')
+            .map(
+              (entry) =>
+                  '${_bonosLabels[entry.key] ?? entry.key}: ${entry.value}%',
+            )
             .toList();
 
     if (activos.isEmpty) return 'Sin bonos';
-
     return activos.take(6).join(', ');
   }
 
@@ -129,23 +161,17 @@ class _AdminTerrenosScreenState extends State<AdminTerrenosScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Administrar terrenos'),
+        title: const Text('Administrar regiones'),
         actions: [
-          Semantics(
-            button: true,
-            enabled: true,
-            focusable: true,
-            label: 'Crear terreno',
-            child: IconButton(
-              tooltip: 'Crear terreno',
-              onPressed: () => _abrirFormulario(),
-              icon: const Icon(Icons.add),
-            ),
+          IconButton(
+            tooltip: 'Crear region',
+            onPressed: () => _abrirFormulario(),
+            icon: const Icon(Icons.add_location_alt),
           ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _service.observarTerrenos(),
+        stream: _service.observarRegionesGlobales(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -153,27 +179,30 @@ class _AdminTerrenosScreenState extends State<AdminTerrenosScreen> {
 
           if (snapshot.hasError) {
             return const Center(
-              child: Text('No se pudieron cargar los terrenos.'),
+              child: Text('No se pudieron cargar las regiones.'),
             );
           }
 
-          final terrenos = snapshot.data?.docs ?? [];
+          final regiones = snapshot.data?.docs ?? [];
 
-          if (terrenos.isEmpty) {
-            return const Center(child: Text('No hay terrenos creados.'));
+          if (regiones.isEmpty) {
+            return const Center(child: Text('No hay regiones creadas.'));
           }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: terrenos.length,
+            itemCount: regiones.length,
             itemBuilder: (context, index) {
-              final terreno = terrenos[index];
-              final data = terreno.data();
+              final region = regiones[index];
+              final data = region.data();
               final nombre = data['nombre']?.toString() ?? '';
               final codigo = data['codigo']?.toString() ?? '';
               final descripcion = data['descripcion']?.toString() ?? '';
               final imagenUrl = data['imagenUrl']?.toString() ?? '';
               final activo = data['activo'] as bool? ?? true;
+              final terrenos = List<String>.from(
+                data['terrenosPermitidos'] ?? [],
+              );
               final bonos = Map<String, dynamic>.from(data['bonos'] ?? {});
 
               return Card(
@@ -181,40 +210,29 @@ class _AdminTerrenosScreenState extends State<AdminTerrenosScreen> {
                 child: ListTile(
                   leading: _buildThumb(
                     imagenUrl: imagenUrl,
-                    fallbackIcon: activo ? Icons.terrain : Icons.block,
+                    fallbackIcon: activo ? Icons.map : Icons.block,
                     activo: activo,
                   ),
                   title: Text('$nombre ($codigo)'),
                   subtitle: Text(
                     '$descripcion\n'
-                    'Estado: ${activo ? 'Activo' : 'Inactivo'}\n'
+                    'Estado: ${activo ? 'Activa' : 'Inactiva'}\n'
+                    'Terrenos: ${terrenos.isEmpty ? 'Sin terrenos' : terrenos.join(', ')}\n'
                     'Bonos: ${_bonosResumen(bonos)}',
                   ),
                   isThreeLine: true,
                   trailing: Wrap(
                     spacing: 6,
                     children: [
-                      Semantics(
-                        button: true,
-                        enabled: true,
-                        focusable: true,
-                        label: 'Editar terreno $nombre',
-                        child: IconButton(
-                          tooltip: 'Editar',
-                          onPressed: () => _abrirFormulario(terreno: terreno),
-                          icon: const Icon(Icons.edit),
-                        ),
+                      IconButton(
+                        tooltip: 'Editar',
+                        onPressed: () => _abrirFormulario(region: region),
+                        icon: const Icon(Icons.edit),
                       ),
-                      Semantics(
-                        button: true,
-                        enabled: true,
-                        focusable: true,
-                        label: 'Eliminar terreno $nombre',
-                        child: IconButton(
-                          tooltip: 'Eliminar',
-                          onPressed: () => _confirmarEliminar(terreno),
-                          icon: const Icon(Icons.delete),
-                        ),
+                      IconButton(
+                        tooltip: 'Eliminar',
+                        onPressed: () => _confirmarEliminar(region),
+                        icon: const Icon(Icons.delete),
                       ),
                     ],
                   ),

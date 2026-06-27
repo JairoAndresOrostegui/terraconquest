@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../../services/admin_partidas_crud_service.dart';
 import 'admin_partida_form_dialog.dart';
-import 'admin_regiones_partida_screen.dart';
 
 class AdminPartidasScreen extends StatefulWidget {
   const AdminPartidasScreen({super.key});
@@ -16,9 +15,9 @@ class _AdminPartidasScreenState extends State<AdminPartidasScreen> {
   final AdminPartidasCrudService _service = AdminPartidasCrudService();
 
   void _mostrarMensaje(String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje)));
   }
 
   Future<void> _abrirFormulario({
@@ -53,22 +52,23 @@ class _AdminPartidasScreenState extends State<AdminPartidasScreen> {
 
     final confirmar = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Eliminar partida'),
-        content: Text(
-          'Seguro que deseas eliminar "${data['nombre'] ?? 'esta partida'}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Eliminar partida'),
+            content: Text(
+              'Seguro que deseas eliminar "${data['nombre'] ?? 'esta partida'}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Eliminar'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
     );
 
     if (confirmar != true) return;
@@ -91,6 +91,36 @@ class _AdminPartidasScreenState extends State<AdminPartidasScreen> {
       return '${date.year}-$mes-$dia';
     }
     return 'Sin fecha';
+  }
+
+  Widget _buildMapaThumb(String imagenUrl) {
+    final url = imagenUrl.trim();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 64,
+        height: 64,
+        child:
+            url.isEmpty
+                ? ColoredBox(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: const Icon(Icons.map),
+                )
+                : Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (_, __, ___) => ColoredBox(
+                        color:
+                            Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                        child: const Icon(Icons.broken_image),
+                      ),
+                ),
+      ),
+    );
   }
 
   @override
@@ -138,6 +168,10 @@ class _AdminPartidasScreenState extends State<AdminPartidasScreen> {
               final partida = partidas[index];
               final data = partida.data();
               final nombre = data['nombre']?.toString() ?? '';
+              final regiones = List<String>.from(
+                data['regionesDisponibles'] ?? [],
+              );
+              final imagenMapaUrl = data['imagenMapaUrl']?.toString() ?? '';
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -146,32 +180,17 @@ class _AdminPartidasScreenState extends State<AdminPartidasScreen> {
                   subtitle: Text(
                     'Estado: ${data['estado'] ?? ''}\n'
                     'Inicio: ${_fecha(data['fechaInicio'])} | Fin: ${_fecha(data['fechaFin'])}\n'
-                    'Día: ${data['diaActual'] ?? 0}/${data['totalDias'] ?? 0} | Registro: ${(data['permitirRegistro'] ?? false) ? 'abierto' : 'cerrado'}',
+                    'Día: ${data['diaActual'] ?? 0}/${data['totalDias'] ?? 0} | Registro: ${(data['permitirRegistro'] ?? false) ? 'abierto' : 'cerrado'}\n'
+                    'Protección: inicial ${data['horasProteccionInicial'] ?? 0}h | ataque ${data['horasProteccionAtaque'] ?? 0}h',
                   ),
-                  isThreeLine: true,
+                  isThreeLine: false,
+                  leading: Badge(
+                    label: Text(regiones.length.toString()),
+                    child: _buildMapaThumb(imagenMapaUrl),
+                  ),
                   trailing: Wrap(
                     spacing: 6,
                     children: [
-                      Semantics(
-                        button: true,
-                        enabled: true,
-                        focusable: true,
-                        label: 'Administrar regiones de $nombre',
-                        child: IconButton(
-                          tooltip: 'Regiones',
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => AdminRegionesPartidaScreen(
-                                  partidaId: partida.id,
-                                  nombrePartida: nombre,
-                                ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.map),
-                        ),
-                      ),
                       Semantics(
                         button: true,
                         enabled: true,

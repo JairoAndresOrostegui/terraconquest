@@ -9,10 +9,7 @@ import '../../services/imperio_service.dart';
 import 'imperio_dashboard_screen.dart';
 
 class CrearImperioScreen extends StatefulWidget {
-  const CrearImperioScreen({
-    super.key,
-    required this.partidaId,
-  });
+  const CrearImperioScreen({super.key, required this.partidaId});
 
   final String partidaId;
 
@@ -25,8 +22,7 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
   final ImperioService _imperioService = ImperioService();
   final TextEditingController _nombreImperioController =
       TextEditingController();
-  final TextEditingController _nombreCiudadController =
-      TextEditingController();
+  final TextEditingController _nombreCiudadController = TextEditingController();
 
   bool _cargando = true;
   bool _guardando = false;
@@ -55,8 +51,9 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
   Future<void> _cargarDatosIniciales() async {
     try {
       final razasFuture = _catalogoService.obtenerRazasActivas();
-      final regionesFuture =
-          _catalogoService.obtenerRegionesDePartida(widget.partidaId);
+      final regionesFuture = _catalogoService.obtenerRegionesDePartida(
+        widget.partidaId,
+      );
       final terrenosFuture = _catalogoService.obtenerTerrenosActivos();
 
       final resultados = await Future.wait([
@@ -92,9 +89,9 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
   }
 
   void _mostrarMensaje(String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje)));
   }
 
   bool _validarFormulario() {
@@ -152,10 +149,11 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => ImperioDashboardScreen(
-            partidaId: widget.partidaId,
-            imperioId: result['imperioId'].toString(),
-          ),
+          builder:
+              (_) => ImperioDashboardScreen(
+                partidaId: widget.partidaId,
+                imperioId: result['imperioId'].toString(),
+              ),
         ),
       );
     } on FirebaseFunctionsException catch (error) {
@@ -208,17 +206,19 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
           labelText: 'Raza',
           border: OutlineInputBorder(),
         ),
-        items: _razas.map((raza) {
-          return DropdownMenuItem<RazaModel>(
-            value: raza,
-            child: Text(raza.nombre),
-          );
-        }).toList(),
-        onChanged: _guardando
-            ? null
-            : (value) {
-                setState(() => _razaSeleccionada = value);
-              },
+        items:
+            _razas.map((raza) {
+              return DropdownMenuItem<RazaModel>(
+                value: raza,
+                child: Text(raza.nombre),
+              );
+            }).toList(),
+        onChanged:
+            _guardando
+                ? null
+                : (value) {
+                  setState(() => _razaSeleccionada = value);
+                },
       ),
     );
   }
@@ -233,20 +233,22 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
           labelText: 'Región inicial',
           border: OutlineInputBorder(),
         ),
-        items: _regiones.map((region) {
-          return DropdownMenuItem<RegionModel>(
-            value: region,
-            child: Text('${region.numero} - ${region.nombre}'),
-          );
-        }).toList(),
-        onChanged: _guardando
-            ? null
-            : (value) {
-                setState(() {
-                  _regionSeleccionada = value;
-                  _terrenoSeleccionado = null;
-                });
-              },
+        items:
+            _regiones.map((region) {
+              return DropdownMenuItem<RegionModel>(
+                value: region,
+                child: Text('${region.codigo} - ${region.nombre}'),
+              );
+            }).toList(),
+        onChanged:
+            _guardando
+                ? null
+                : (value) {
+                  setState(() {
+                    _regionSeleccionada = value;
+                    _terrenoSeleccionado = null;
+                  });
+                },
       ),
     );
   }
@@ -263,17 +265,19 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
           labelText: 'Terreno inicial',
           border: OutlineInputBorder(),
         ),
-        items: disponibles.map((terreno) {
-          return DropdownMenuItem<TerrenoModel>(
-            value: terreno,
-            child: Text(terreno.nombre),
-          );
-        }).toList(),
-        onChanged: _guardando || _regionSeleccionada == null
-            ? null
-            : (value) {
-                setState(() => _terrenoSeleccionado = value);
-              },
+        items:
+            disponibles.map((terreno) {
+              return DropdownMenuItem<TerrenoModel>(
+                value: terreno,
+                child: Text(terreno.nombre),
+              );
+            }).toList(),
+        onChanged:
+            _guardando || _regionSeleccionada == null
+                ? null
+                : (value) {
+                  setState(() => _terrenoSeleccionado = value);
+                },
       ),
     );
   }
@@ -281,15 +285,11 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
   @override
   Widget build(BuildContext context) {
     if (_cargando) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Crear imperio'),
-      ),
+      appBar: AppBar(title: const Text('Crear imperio')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Center(
@@ -333,13 +333,14 @@ class _CrearImperioScreenState extends State<CrearImperioScreen> {
                   label: 'Crear imperio',
                   child: FilledButton.icon(
                     onPressed: _guardando ? null : _crearImperio,
-                    icon: _guardando
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.flag),
+                    icon:
+                        _guardando
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Icon(Icons.flag),
                     label: Text(_guardando ? 'Creando...' : 'Crear imperio'),
                   ),
                 ),

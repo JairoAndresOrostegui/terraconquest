@@ -78,8 +78,9 @@ export const obtenerTropasDisponibles = onCall(async (request) => {
 
   const razaId = typeof imperio.razaId === "string" ? imperio.razaId : "";
   const tropasSnap = await db
+    .collection("razas")
+    .doc(razaId)
     .collection("tropas")
-    .where("razaId", "==", razaId)
     .where("activo", "==", true)
     .get();
 

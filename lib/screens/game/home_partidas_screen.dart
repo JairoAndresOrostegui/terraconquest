@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import '../../models/imperio_resumen_model.dart';
 import '../../models/partida_model.dart';
 import '../../services/partida_service.dart';
-import '../admin/partidas/admin_partidas_screen.dart';
-import '../admin/terrenos/admin_terrenos_screen.dart';
+import '../admin/admin_dashboard_screen.dart';
 import 'crear_imperio_screen.dart';
 import 'imperio_dashboard_screen.dart';
 
@@ -115,16 +114,40 @@ class _HomePartidasScreenState extends State<HomePartidasScreen> {
         .map((snapshot) => snapshot.data());
   }
 
-  void _abrirPartidasAdmin() {
+  void _abrirAdmin() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => const AdminPartidasScreen()));
+    ).push(MaterialPageRoute(builder: (_) => const AdminDashboardScreen()));
   }
 
-  void _abrirTerrenosAdmin() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const AdminTerrenosScreen()));
+  Widget _buildMapaThumb(PartidaModel partida) {
+    final imagenUrl = partida.imagenMapaUrl.trim();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 76,
+        height: 76,
+        child:
+            imagenUrl.isEmpty
+                ? ColoredBox(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: const Center(child: Icon(Icons.map)),
+                )
+                : Image.network(
+                  imagenUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (_, __, ___) => ColoredBox(
+                        color:
+                            Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                        child: const Center(child: Icon(Icons.broken_image)),
+                      ),
+                ),
+      ),
+    );
   }
 
   Widget _buildNavigation({
@@ -155,18 +178,10 @@ class _HomePartidasScreenState extends State<HomePartidasScreen> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.admin_panel_settings),
-              title: const Text('Administrar partidas'),
+              title: const Text('Administracion'),
               onTap: () {
                 Navigator.maybePop(context);
-                _abrirPartidasAdmin();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.terrain),
-              title: const Text('Administrar terrenos'),
-              onTap: () {
-                Navigator.maybePop(context);
-                _abrirTerrenosAdmin();
+                _abrirAdmin();
               },
             ),
           ],
@@ -178,6 +193,14 @@ class _HomePartidasScreenState extends State<HomePartidasScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInfoChip({required IconData icon, required String texto}) {
+    return Chip(
+      avatar: Icon(icon, size: 16),
+      label: Text(texto),
+      visualDensity: VisualDensity.compact,
     );
   }
 
@@ -225,78 +248,126 @@ class _HomePartidasScreenState extends State<HomePartidasScreen> {
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 14),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Semantics(
-                      container: true,
-                      label:
-                          'Partida ${partida.nombre}, estado ${partida.estado}',
-                      child: Column(
+                  child: Semantics(
+                    container: true,
+                    label:
+                        'Partida ${partida.nombre}, estado ${partida.estado}',
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '${partida.nombre} - Ronda ${partida.ronda}',
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
+                          _buildMapaThumb(partida),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${partida.nombre} - Ronda ${partida.ronda}',
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.titleMedium,
+                                      ),
+                                    ),
+                                    Chip(
+                                      label: Text(partida.estado),
+                                      backgroundColor: estadoColor.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      labelStyle: TextStyle(
+                                        color: estadoColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              Chip(
-                                label: Text(partida.estado),
-                                backgroundColor: estadoColor.withValues(
-                                  alpha: 0.15,
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 6,
+                                  children: [
+                                    _buildInfoChip(
+                                      icon: Icons.today,
+                                      texto:
+                                          'Dia ${partida.diaActual}/${partida.totalDias}',
+                                    ),
+                                    _buildInfoChip(
+                                      icon: Icons.groups,
+                                      texto:
+                                          '${partida.maxImperiosPorClan} imperios/clan',
+                                    ),
+                                    _buildInfoChip(
+                                      icon: Icons.map,
+                                      texto:
+                                          '${partida.regionesDisponibles.length} regiones',
+                                    ),
+                                    _buildInfoChip(
+                                      icon: Icons.shield,
+                                      texto:
+                                          'Inicial ${partida.horasProteccionInicial}h',
+                                    ),
+                                    _buildInfoChip(
+                                      icon: Icons.security,
+                                      texto:
+                                          'Ataque ${partida.horasProteccionAtaque}h',
+                                    ),
+                                    _buildInfoChip(
+                                      icon:
+                                          partida.permitirRegistro
+                                              ? Icons.how_to_reg
+                                              : Icons.lock,
+                                      texto:
+                                          partida.permitirRegistro
+                                              ? 'Registro abierto'
+                                              : 'Registro cerrado',
+                                    ),
+                                  ],
                                 ),
-                                labelStyle: TextStyle(
-                                  color: estadoColor,
-                                  fontWeight: FontWeight.bold,
+                                const SizedBox(height: 8),
+                                if (imperioSnapshot.connectionState ==
+                                    ConnectionState.waiting)
+                                  const LinearProgressIndicator(),
+                                if (imperio != null) ...[
+                                  Text(
+                                    'Tu imperio: ${imperio.nombre}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text('Valor: ${imperio.valor}'),
+                                  Text('Ranking: ${imperio.ranking}'),
+                                ],
+                                const SizedBox(height: 12),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Semantics(
+                                    button: true,
+                                    enabled: habilitado,
+                                    focusable: true,
+                                    label: textoBoton,
+                                    child: FilledButton.icon(
+                                      onPressed:
+                                          habilitado
+                                              ? () => _accionBoton(
+                                                partida: partida,
+                                                imperio: imperio,
+                                              )
+                                              : null,
+                                      icon: Icon(
+                                        imperio != null
+                                            ? Icons.login
+                                            : Icons.flag,
+                                      ),
+                                      label: Text(textoBoton),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Dia actual: ${partida.diaActual} / ${partida.totalDias}',
-                          ),
-                          Text(
-                            'Maximo imperios por clan: ${partida.maxImperiosPorClan}',
-                          ),
-                          Text(
-                            'Proteccion inicial: ${partida.horasProteccionInicial} horas',
-                          ),
-                          const SizedBox(height: 8),
-                          if (imperioSnapshot.connectionState ==
-                              ConnectionState.waiting)
-                            const LinearProgressIndicator(),
-                          if (imperio != null) ...[
-                            Text(
-                              'Tu imperio: ${imperio.nombre}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text('Valor: ${imperio.valor}'),
-                            Text('Ranking: ${imperio.ranking}'),
-                          ],
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Semantics(
-                              button: true,
-                              enabled: habilitado,
-                              focusable: true,
-                              label: textoBoton,
-                              child: FilledButton(
-                                onPressed:
-                                    habilitado
-                                        ? () => _accionBoton(
-                                          partida: partida,
-                                          imperio: imperio,
-                                        )
-                                        : null,
-                                child: Text(textoBoton),
-                              ),
+                              ],
                             ),
                           ),
                         ],

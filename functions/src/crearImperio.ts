@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { calcularProduccionCiudad } from "./core/calculoProduccion";
 
 const recursosIniciales = {
   oro: 10000,
@@ -8,27 +9,6 @@ const recursosIniciales = {
   madera: 5000,
   piedra: 3000,
   hierro: 1000,
-  herramientas: 0,
-  armas: 0,
-  bloques: 0,
-  tablas: 0,
-  mithril: 0,
-  cristal: 0,
-  plata: 0,
-  reliquias: 0,
-  gemas: 0,
-  joyas: 0,
-  mana: 0,
-  karma: 0
-};
-
-const produccionCero = {
-  oro: 0,
-  alimentos: 0,
-  agua: 0,
-  madera: 0,
-  piedra: 0,
-  hierro: 0,
   herramientas: 0,
   armas: 0,
   bloques: 0,
@@ -144,7 +124,7 @@ export const crearImperio = onCall(async (request) => {
 
   const partidaRef = db.collection("partidas").doc(partidaId);
   const razaRef = db.collection("razas").doc(razaId);
-  const regionRef = partidaRef.collection("regiones").doc(regionId);
+  const regionRef = db.collection("regiones").doc(regionId);
   const terrenoRef = db.collection("terrenos").doc(terrenoId);
 
   return db.runTransaction(async (tx) => {
@@ -169,6 +149,7 @@ export const crearImperio = onCall(async (request) => {
     }
 
     const partida = partidaSnap.data() ?? {};
+    const raza = razaSnap.data() ?? {};
     const region = regionSnap.data() ?? {};
     const terreno = terrenoSnap.data() ?? {};
 
@@ -182,6 +163,14 @@ export const crearImperio = onCall(async (request) => {
       throw new HttpsError(
         "failed-precondition",
         "El registro está cerrado para esta partida."
+      );
+    }
+
+    const regionesDisponibles = obtenerListaStrings(partida.regionesDisponibles);
+    if (!regionesDisponibles.includes(regionId)) {
+      throw new HttpsError(
+        "failed-precondition",
+        "La regiÃ³n seleccionada no estÃ¡ disponible en esta partida."
       );
     }
 
@@ -238,38 +227,8 @@ export const crearImperio = onCall(async (request) => {
     const diaActual = obtenerNumero(partida.diaActual);
     const numeroImperio = obtenerNumero(partida.contadorImperios) + 1;
     const numeroCiudad = obtenerNumero(partida.contadorCiudades) + 1;
-    const regionNumero = obtenerNumero(region.numero);
-
-    tx.set(imperioRef, {
-      userId,
-      nombre: nombreImperio.trim(),
-      nombreLower: nombreImperioLower,
-      razaId,
-      clanId: null,
-      estado: "activo",
-      numeroImperio,
-      diaCreacion: diaActual,
-      proteccionHasta: null,
-      recursos: recursosIniciales,
-      produccionDiaria: produccionCero,
-      turnos: 100,
-      turnosGeneradosDia: 0,
-      fama: 0,
-      indiceBelico: 0,
-      valor: 0,
-      valorSinVictoriasHeroes: 0,
-      ranking: 0,
-      rankingAnterior: 0,
-      totalCiudades: 1,
-      totalHeroes: 0,
-      totalPoblacion: 1000,
-      totalEdificios: 0,
-      totalTropas: 0,
-      creadoEn: ahora,
-      actualizadoEn: ahora
-    });
-
-    tx.set(ciudadRef, {
+    const regionCodigo = typeof region.codigo === "string" ? region.codigo : "";
+    const ciudadBase = {
       imperioId: imperioRef.id,
       userId,
       clanId: null,
@@ -277,7 +236,13 @@ export const crearImperio = onCall(async (request) => {
       nombreLower: nombreCiudadLower,
       numeroCiudad,
       regionId,
-      regionNumero,
+      regionCodigo,
+      regionBonos:
+        typeof region.bonos === "object" &&
+        region.bonos !== null &&
+        !Array.isArray(region.bonos)
+          ? region.bonos
+          : {},
       terrenoId,
       poblacion: 1000,
       estado: "activa",
@@ -291,17 +256,54 @@ export const crearImperio = onCall(async (request) => {
       cultura: 0,
       impuestosPct: 10,
       sistemaDefensivoId: "normal",
-      produccionDiaria: produccionCero,
-      consumoDiario: {
-        alimentos: 0,
-        agua: 0
-      },
-      crecimientoPoblacionDia: 0,
       nivelesTropasDefensaActuales: 0,
       nivelesTropasDefensaMinimos: 0,
       limiteTropas: 0,
       edificios: edificiosIniciales,
+      totalEdificios: 1
+    };
+    const calculo = calcularProduccionCiudad({
+      ciudad: ciudadBase,
+      edificios: edificiosIniciales,
+      terreno,
+      raza,
+      region
+    });
+
+    tx.set(imperioRef, {
+      userId,
+      nombre: nombreImperio.trim(),
+      nombreLower: nombreImperioLower,
+      razaId,
+      clanId: null,
+      estado: "activo",
+      numeroImperio,
+      diaCreacion: diaActual,
+      proteccionHasta: null,
+      recursos: recursosIniciales,
+      produccionDiaria: calculo.produccionDiaria,
+      turnos: 100,
+      turnosGeneradosDia: 0,
+      fama: 0,
+      indiceBelico: 0,
+      valor: 0,
+      valorSinVictoriasHeroes: 0,
+      ranking: 0,
+      rankingAnterior: 0,
+      totalCiudades: 1,
+      totalHeroes: 0,
+      totalPoblacion: 1000,
       totalEdificios: 1,
+      totalTropas: 0,
+      creadoEn: ahora,
+      actualizadoEn: ahora
+    });
+
+    tx.set(ciudadRef, {
+      ...ciudadBase,
+      produccionDiaria: calculo.produccionDiaria,
+      consumoDiario: calculo.consumoDiario,
+      crecimientoPoblacionDia: calculo.crecimientoPoblacionDia,
       creadoEn: ahora,
       actualizadoEn: ahora,
       conquistadaEn: null

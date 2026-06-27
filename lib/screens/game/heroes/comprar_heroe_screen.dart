@@ -98,7 +98,9 @@ class _ComprarHeroeScreenState extends State<ComprarHeroeScreen> {
       _mensaje(error.message ?? 'No se pudo comprar el héroe.');
     } catch (_) {
       if (!mounted) return;
-      _mensaje('No se pudo comprar el héroe. Revisa oro, nombre y disponibilidad.');
+      _mensaje(
+        'No se pudo comprar el héroe. Revisa oro, nombre y disponibilidad.',
+      );
     } finally {
       if (mounted) {
         setState(() => _comprando = false);
@@ -161,15 +163,11 @@ class _ComprarHeroeScreenState extends State<ComprarHeroeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_cargandoRegiones) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Comprar héroe'),
-      ),
+      appBar: AppBar(title: const Text('Comprar héroe')),
       body: Column(
         children: [
           Padding(
@@ -200,19 +198,21 @@ class _ComprarHeroeScreenState extends State<ComprarHeroeScreen> {
                       labelText: 'Región inicial',
                       border: OutlineInputBorder(),
                     ),
-                    items: _regiones.map((region) {
-                      return DropdownMenuItem<RegionModel>(
-                        value: region,
-                        child: Text('${region.numero} - ${region.nombre}'),
-                      );
-                    }).toList(),
-                    onChanged: _comprando
-                        ? null
-                        : (value) {
-                            setState(() {
-                              _regionSeleccionada = value;
-                            });
-                          },
+                    items:
+                        _regiones.map((region) {
+                          return DropdownMenuItem<RegionModel>(
+                            value: region,
+                            child: Text('${region.codigo} - ${region.nombre}'),
+                          );
+                        }).toList(),
+                    onChanged:
+                        _comprando
+                            ? null
+                            : (value) {
+                              setState(() {
+                                _regionSeleccionada = value;
+                              });
+                            },
                   ),
                 ),
               ],
@@ -230,7 +230,9 @@ class _ComprarHeroeScreenState extends State<ComprarHeroeScreen> {
 
                 if (snapshot.hasError) {
                   return const Center(
-                    child: Text('No se pudieron cargar los héroes disponibles.'),
+                    child: Text(
+                      'No se pudieron cargar los héroes disponibles.',
+                    ),
                   );
                 }
 

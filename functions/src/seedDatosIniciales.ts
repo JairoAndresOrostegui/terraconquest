@@ -22,6 +22,7 @@ export const seedDatosIniciales = onCall(async (request) => {
   const razas = [
     {
       id: "humanos",
+      codigo: "humanos",
       nombre: "Humanos",
       descripcion: "Raza equilibrada, adaptable y estable.",
       imagenUrl: "",
@@ -40,13 +41,12 @@ export const seedDatosIniciales = onCall(async (request) => {
         ataquePct: 0,
         defensaPct: 0
       },
-      politicasDisponibles: ["justicia", "comercio", "religion"],
-      tropasDisponibles: ["soldado_n1", "arquero_n2", "caballero_n3"],
       creadoEn: ahora,
       actualizadoEn: ahora
     },
     {
       id: "no_muertos",
+      codigo: "no_muertos",
       nombre: "No Muertos",
       descripcion: "Raza oscura con buen potencial militar y mágico.",
       imagenUrl: "",
@@ -65,13 +65,12 @@ export const seedDatosIniciales = onCall(async (request) => {
         ataquePct: 0,
         defensaPct: 0
       },
-      politicasDisponibles: ["culto_demoniaco", "tortura", "nigromancia"],
-      tropasDisponibles: ["esqueleto_n1", "zombi_n2", "ghoul_n3"],
       creadoEn: ahora,
       actualizadoEn: ahora
     },
     {
       id: "enanos",
+      codigo: "enanos",
       nombre: "Enanos",
       descripcion: "Raza defensiva con alta producción minera.",
       imagenUrl: "",
@@ -90,8 +89,6 @@ export const seedDatosIniciales = onCall(async (request) => {
         ataquePct: 0,
         defensaPct: 0
       },
-      politicasDisponibles: ["forja", "mineria", "defensa"],
-      tropasDisponibles: ["guerrero_enano_n1", "ballestero_n2", "guardian_n3"],
       creadoEn: ahora,
       actualizadoEn: ahora
     }
@@ -340,7 +337,14 @@ export const seedDatosIniciales = onCall(async (request) => {
 
   for (const tropa of tropas) {
     const { id, ...data } = tropa;
-    batch.set(db.collection("tropas").doc(id), data, { merge: true });
+    batch.set(
+      db.collection("razas").doc(tropa.razaId).collection("tropas").doc(id),
+      {
+        codigo: id,
+        ...data
+      },
+      { merge: true }
+    );
   }
 
   batch.set(
@@ -503,11 +507,13 @@ export const seedDatosIniciales = onCall(async (request) => {
       ronda: 1,
       estado: "activa",
       mapaId: "mapa_prueba",
+      imagenMapaUrl: "",
       fechaInicio: admin.firestore.Timestamp.now(),
       fechaFin: null,
       diaActual: 1,
       totalDias: 60,
       horasProteccionInicial: 24,
+      horasProteccionAtaque: 12,
       maxImperiosPorClan: 5,
       permitirRegistro: true,
       pasoDiaHora: "00:00",
